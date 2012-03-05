@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="ftp.ant.ask" basedir="." default="build">
+	
+	<!-- Basic parameters required -->
+    <property environment="env"/>
+    <property name="ECLIPSE_HOME" value="../../eclipse java"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+	<property name="username" value="Alejandro Villamarin"/>
+	<property name="company.name" value="Tecnalia Research And Innovation"/>
+	<property name="jar.name" value="ftp.ant.task"/>
+	<property name="lib.dir" value="lib"/>
+	<property name="dist.dir" value="dist"/>
+	<property name="doc.dir" value="docs"/>
+	<property name="package.dir" value="ftp/ant/task"/>
+	
+	<!-- Variables used for testing the task -->
+	<property name="upload.dir" value="uploads"/>
+	<property name="download.dir" value="downloads"/>
+	
+	<property name="file" value=""/>
+	<property name="host" value=""/>
+	<property name="port" value=""/>
+	<property name="user" value=""/>
+	<property name="password" value=""/>
+	
+	<!-- Used for versioning system -->
+	<property name="revision.number" value="1"/>
+	<property name="minor.version.number" value="1"/>
+	<property name="major.version.number" value="1"/>
+	
+	<!-- FTP4j library version -->
+	<property name="ftp4j.version.number" value="1.6.1"/>
+	<property name="ftp4j.name" value="ftp4j"/>
+	
+	<!-- Log4j library version -->
+	<property name="log4j.version.number" value="1.2.9"/>
+	<property name="log4j.name" value="log4j"/>
+	
+	
+	<!-- vsftpclient library version -->
+	<property name="vsftpclient.version.number" value="1.1.1"/>
+	<property name="vsftpclient.name" value="vsftpclient"/>
+	
+	<!-- Specify classpath to use external libraries -->
+    <path id="classpath">
+    	<!-- Include java.class.path so we don't have to manually include ant.jar, otherwise drop it in /lib folder -->
+    	<path path="${java.class.path}"/>
+        <fileset dir="${lib.dir}">
+        	<include name="**/ftp4j-1.6.1.jar"/>
+        	<include name="**/log4j-1.2.9.jar"/>
+        	<include name="**/vsftpclient_1.1.1.jar"/>
+    	</fileset>
+    </path>
+	
+    <!-- This macro definition is used to get a timestamp at any given point by calling it-->
+    <macrodef  name="set.timestamp">
+    	<sequential>
+    		<tstamp>
+    	    	<format property="current.time" pattern="yyyyMMdd"/>
+    	    </tstamp>
+    	</sequential>
+   	</macrodef>
+	
+	<!-- Creates the bin folder -->
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+	
+	
+	<!-- Deletes the bin folder -->
+    <target name="clean">
+        <delete failonerror="false" includeEmptyDirs="true" dir="bin"/>
+    	<delete>
+    		<fileset dir="${dist.dir}" includes="*"/>
+    	</delete>
+    	<delete failonerror="false" includeEmptyDirs="true" dir="${doc.dir}"/>
+    	<delete failonerror="false" includeEmptyDirs="true" dir="downloads"/>
+    	<delete failonerror="false" includeEmptyDirs="true" dir="uploads"/>
+    </target>
+
+	<!-- Calls the clean task -->
+    <target depends="clean" name="cleanall"/>
+	
+    <target depends="build-subprojects,build-project" name="build"/>
+	
+    <target name="build-subprojects"/>
+	
+	<!-- This is the task that compiles the sources -->
+    <target depends="init" name="build-project">
+    	<echo message="Compilation of the ${ant.project.name} project commencing..."/>
+    	<echo message="Classpath is ${java.class.path}"/>
+        <javac debug="true" debuglevel="${debuglevel}" 
+        	   destdir="bin" 
+        	   source="${source}" 
+        	   target="${target}"
+        	   classpathref="classpath"
+        	   includeantruntime="false">
+            <src path="src"/>
+        </javac>
+    </target>
+		
+	<!-- Task to generate the JAR file for the ftpclient library -->
+	<target depends="build-project" name="jar">
+		<echo message="Generation of the Ant FTP Task JAR file commencing..."/>
+	    <!-- Get the timestamp -->	
+		<set.timestamp/>
+		<!-- Create our own manifest file for our JAR -->
+		<manifest file="MANIFEST.MF">
+			<attribute name="Built-By" value="${username} - ${company.name}"/>
+		    <attribute name="Implementation-Title" value="A very simple FTP client using the ftp4j library"/>
+		    <attribute name="Main-Class" value="FTPclient"/>
+		    <attribute name="Implementation-Version" 
+		    	       value="${major.version.number}.${minor.version.number}.${revision.number}"/>   
+		    <attribute name="Built-Date" value="${current.time}"/>                 
+	  	</manifest>
+			    	
+		<!-- Create the JAR File, failing if nothing was included-->
+		<jar whenmanifestonly="fail" destfile="${dist.dir}/${jar.name}_${major.version.number}.${minor.version.number}.${revision.number}.jar" manifest="MANIFEST.MF">
+			<fileset dir="bin">
+		    	<include name="${package.dir}/*.class"/>
+		    </fileset>
+			    	
+		    <!-- Comment this if you don't want sources attached to the JAR -->
+		    <fileset dir="src">
+		    	<include name="${package.dir}/*.java"/>
+		    </fileset>
+		</jar>
+		<echo message="Generation of the Ant FTP Task client JAR file finished!"/>
+	</target>
+	
+	<!-- Generates the JavaDoc -->
+	<target name="doc" description="Generates the Javadoc associated">
+		<javadoc destdir="${doc.dir}/api"
+			     author="true"
+			     version="true"
+			     use="true"
+			     windowtitle="Custom FPT Ant Task API">
+			<!-- Have to specify classpath for thir-party libraries -->
+			<classpath>
+				<fileset dir="${lib.dir}">
+					<include name="ant.jar"/>
+			    	<include name="${ftp4j.name}-${ftp4j.version.number}.jar"/>
+			       	<include name="${log4j.name}-${log4j.version.number}.jar"/>
+			        <include name="${vsftpclient.name}_${vsftpclient.version.number}.jar"/>
+			    </fileset>
+			</classpath>
+			<packageset dir="src" defaultexcludes="yes">
+			    <include name="ftp/ant/task/**"/>
+			    <exclude name="ftp/ant/task/doc-files/**"/>
+			</packageset>
+				
+			<link href="http://download.oracle.com/javase/6/docs/api/"/>
+			<link href="http://logging.apache.org/log4j/1.2/apidocs/"/> 
+			<link href="http://www.sauronsoftware.it/projects/ftp4j/api/"/>
+			    
+			<doctitle><![CDATA[<h1>Custom Ant FTP task API</h1>]]></doctitle>
+			<bottom><![CDATA[<i> 2011 Alejandro Villamarin. Use, distribute, copy and share at your own discretion.</i>]]></bottom>
+		</javadoc>
+	</target>
+		
+	<!-- Packs the JAR ftp.ant.task.jar and the folder with required libraries in a zip file, along a readme and a changelog -->
+	<target depends="jar" name="release">
+		<echo message="Generation of the zipped file with everything needed to use the library commencing..."/>
+		<!-- Get the timestamp -->   	
+		<set.timestamp/>
+					
+		<!-- call the javadoc generation task -->
+		<antcall target="doc">
+		</antcall>
+			
+		<!-- Make the zipped file -->
+		<zip destfile="${dist.dir}/${jar.name}_${major.version.number}.${minor.version.number}.${revision.number}-${current.time}.zip">
+			<!-- Place required libraries in the lib folder -->
+			<zipfileset dir="lib"  includes="**/*.jar" prefix="lib"/>
+			<!-- Include src folder and source files -->
+			<zipfileset dir="src" prefix="src"/>
+			<!-- Include build.xml file -->
+			<zipfileset dir="." includes="build.xml"/>
+			<!-- Include our JAR -->
+			<zipfileset dir="${dist.dir}" prefix="dist" includes="${jar.name}.jar"/>
+			<!-- Include CHANGELOG and README files -->
+			<zipfileset dir="." includes="Changelog"/>
+			<zipfileset dir="." includes="README"/>
+			<!-- Include Javadoc -->
+			<zipfileset dir="${doc.dir}" prefix="docs"/>
+		</zip> 	
+		<echo message="Generation of the zipped file finished!"/>
+	</target>
+
+	<!-- You can use the tasks below to test the customised ant Task, in case you need to debug
+	     the ANT task, please read http://www.vitorrodrigues.com/blog/2009/07/10/debugging-ant-tasks-in-eclipse/
+	     for further info -->
+	
+	<!-- Used to initialize the classpath before using the task -->
+	<target name="use.init" description="Taskdef the VerySimpleFtpAntTask" depends="jar">
+		<!-- create dummy test directories -->
+		<mkdir dir="uploads"/>
+		<echo file="${upload.dir}/foo" append="false">This is just a test to upload a file</echo>
+		<mkdir dir="downloads"/>
+		
+		
+		<!-- Task definition always dependent of compilation first. Besides, classname must point to
+				     full path of the class i.e. org.java.System...classpath is mandatory, otherwise Ant will 
+				     don't know where to look for the class -->
+		<taskdef name="verysimpleftptask"
+		         classname="ftp.ant.task.VerySimpleFtpAntTask">
+			  <!-- Have to include in the Ant classpath all used library, otherwise it won't find it -->
+		      <classpath>
+		        <pathelement location="${dist.dir}/${jar.name}.jar" /> 
+		        <pathelement location="${lib.dir}/${ftp4j.name}-${ftp4j.version.number}.jar" />
+		      	<pathelement location="${lib.dir}/${log4j.name}-${log4j.version.number}.jar" />
+		      	<pathelement location="${lib.dir}/${vsftpclient.name}_${vsftpclient.version.number}.jar" />	
+		      </classpath>
+		</taskdef>
+	</target>
+	
+	<!-- Upload dir -->
+	<target name="use.upload.dir" description="Upload a directory contents to another" depends="use.init">
+		<verysimpleftptask host="${host}"
+			                  port="${port}"
+							  user="${user}"
+							  password="${password}"
+		                      bypass="true"
+							  connType="2"
+							  action="putdir"
+							  sourceDir="${upload.dir}"
+			                  destDir="adk/lib/java"
+		/>
+	</target>
+	
+	<!-- Upload file -->
+	<target name="use.upload.file" description="Upload file to specified directory" depends="use.init">
+		<verysimpleftptask host="${host}"
+			                  port="${port}"
+							  user="${user}"
+							  password="${password}"
+		                      bypass="true"
+							  connType="2"
+							  action="putfile"
+							  file="${upload.dir}/${file}"
+			                  destDir="adk/lib/java"
+		/>
+	</target>
+	
+	<!-- Download directory -->
+	<target name="use.download.dir" description="Downaload contents of directory" depends="use.init">
+		<verysimpleftptask host="${host}"
+			                  port="${port}"
+							  user="${user}"
+							  password="${password}"
+		                      bypass="true"
+							  connType="2"
+							  action="getdir"
+							  sourceDir="adk/lib/java"
+			                  destDir="${download.dir}"
+		/>
+	</target>
+	
+	<!-- Download file -->
+	<target name="use.download.file" description="Downaload specified file in directory" depends="use.init">
+		<verysimpleftptask host="${host}"
+			                  port="${port}"
+							  user="${user}"
+							  password="${password}"
+		                      bypass="true"
+							  connType="2"
+							  action="getfile"
+							  file="${file}"
+							  sourceDir="adk/lib/java"
+			                  destDir="${download.dir}/"
+		/>
+	</target>
+	
+	<!-- Use all -->
+	<target name="use.all" description="All tests" depends="use.init, use.upload.dir, use.upload.file, use.download.dir, use.download.file">
+		<echo message="All tests passed correctly! Hoorray!"/>
+	</target>
+	
+	
+</project>
