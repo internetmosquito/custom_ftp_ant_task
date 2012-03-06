@@ -1,0 +1,44 @@
+EXECUTIVE SUMMARY
+*****************
+
+This is just a test project to test the fpt.ant.task project in a non-production enviroment
+
+alejandro.villamarin@tecnalia.com
+
+
+TECHNICAL REQUIREMENTS
+**********************
+
+You should have installed ant and Java in order to make this project run. Otherwise you can use the ant provided in the /lib folder.
+Besides this obvious ones, there are other libraries required:
+
+* fpt.ant.task_1.1.1.jar
+* fpt4j-1.6.1.jar
+* log4j-1.2.9.jar
+* vsftpclient_1.1.1.jar
+
+Worry not, since all these are already in the /lib folder and the ant script has been configured so its classpath uses them. If you
+want to use another version of those, keep in mind to modify classpath references in the script too.
+
+
+USAGE INSTRUCTIONS
+******************
+
+There are several ant tasks to test the custom ant task ftp.ant.task. These test will cover:
+
+* upload-dir: Uploads dir /tmp/uploads to the one specified in property ${dest.dir} NOTE: Make sure ${dest.dir} exists, otherwise this will fail
+* download-dir: Downloads dir specified in property ${dest.dir} to /tmp/downloads
+* delete-file: Deletes file named foo from dir specified in property ${dest.dir}
+* upload-file: Uploads file named foo from /tmp/uploads to dir specified in property ${dest.dir}
+* download-file: Downloads file named foo from dir specified in property ${dest.dir} to /tmp/downloads
+* delete-dir: Deletes dir specified in property ${dest.dir}
+* test-ftp-ant-task: Runs all test in the order specified
+* ftp-init: Initializes everything, required before running anything else
+
+Simply run test-ftp-ant-task from Eclipse or a shell and that should do it
+
+Feel free to contact me for any comments, bugs or suggestions
+alejandrovillamarin at gmail dot com - Alejandro Villamarin
+
+
+

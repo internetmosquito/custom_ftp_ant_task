@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<project name="ftp.ant.task.test" default="test-ftp-ant-task" basedir=".">
+<!-- ################################################ 	-->	
+<!--  					Property definitions 			-->
+<!-- ################################################ 	-->
+
+ 	<property name="user.name" value="Alejandro Villamarin"/>
+	<property name="company.name" value="Tecnalia Research And Innovation"/>
+	<property name="eu.sofia.kpi.j2se" value="eu/sofia/kpi/j2se/"/>
+
+	<!-- Used for versioning system -->
+	<property name="revision.number" value="0"/>
+	<property name="minor.version.number" value="0"/>
+	<property name="major.version.number" value="1"/>
+	
+	<!-- ################################################ 	-->	
+	<!-- VARIABLES USED FOR THE FTP TASK -->
+	<!-- ################################################ 	-->	
+	
+	<!-- ANT file location -->
+	<property name="tmp.dir" value="tmp"/>
+	<property name="lib.dir" value="lib"/>
+	
+	<!-- Variables used for the ftp task -->
+	<property name="upload.dir" value="tmp/uploads"/>
+	<property name="download.dir" value="tmp/downloads"/>
+	<property name="dest.dir" value="tmp/"/>
+	<property name="file" value="foo"/>
+	<property name="host" value="localhost"/>
+	<property name="port" value="21"/>
+	<property name="user" value="anonymous"/>
+	<property name="password" value="master"/>
+	<property name="bypass" value="true"/>
+	
+	<!-- FTP4j library version -->
+	
+	<property name="ftp4j.version.number" value="1.6.1"/>
+	<property name="ftp4j.name" value="ftp4j"/>
+	
+	<!-- Log4j library version -->
+	<property name="log4j.version.number" value="1.2.9"/>
+	<property name="log4j.name" value="log4j"/>
+	
+	
+	<!-- vsftpclient library version -->
+	<property name="vsftpclient.version.number" value="1.1.1"/>
+	<property name="vsftpclient.name" value="vsftpclient"/>
+	
+	<!-- ftp.ant.task library version -->
+	<property name="ftp.ant.task.version.number" value="1.1.1"/>
+	<property name="ftp.ant.task.name" value="ftp.ant.task"/>
+
+	<!-- CLASSPATH -->
+	<!-- Specify classpath to use external libraries -->
+    <path id="classpath">
+    	<!-- Include java.class.path so we don't have to manually include ant.jar, otherwise drop it in /lib folder -->
+    	<path path="${java.class.path}"/>
+        <fileset dir="${libs.dir}">      	
+        	<include name="**/ftp.ant.task_1.1.1.jar"/>
+        	<include name="**/ftp4j-1.6.1.jar"/>
+        	<include name="**/log4j-1.2.9.jar"/>
+        	<include name="**/vsftpclient_1.1.0.jar"/>
+   	</fileset>
+    </path>
+		
+<!-- This macro definition is used to get a timestamp at any given point by calling it-->
+	<macrodef  name="set.timestamp">
+	  <sequential>
+	    <tstamp>
+	      <format property="current.time" pattern="yyyyMMdd"/>
+	    </tstamp>
+	    </sequential>	
+	</macrodef>
+	
+
+<!-- ################################################ 	-->
+<!-- 			TASK DEFINITION 						-->
+<!-- ################################################ 	-->   
+    
+	<!-- Used to initialize the classpath before using the task -->
+	<target name="ftp-init" depends="clean">
+		<echo message="Setting Ant classpath so it can use ftp.ant.task_1.1.1.jar"/>
+		<!-- Task definition always dependent of compilation first. Besides, classname must point to
+			 full path of the class i.e. org.java.System...classpath is mandatory, otherwise Ant will 
+			 don't know where to look for the class -->
+			<taskdef name="verysimpleftptask"
+			         classname="ftp.ant.task.VerySimpleFtpAntTask">
+				  <!-- Have to include in the Ant classpath all used library, otherwise it won't find it -->
+			      <classpath>
+			        <pathelement location="${lib.dir}/${ftp.ant.task.name}_${ftp.ant.task.version.number}.jar" /> 
+			        <pathelement location="${lib.dir}/${ftp4j.name}-${ftp4j.version.number}.jar" />
+			      	<pathelement location="${lib.dir}/${log4j.name}-${log4j.version.number}.jar" />
+			      	<pathelement location="${lib.dir}/${vsftpclient.name}_${vsftpclient.version.number}.jar" />	
+			      </classpath>
+			</taskdef>
+			
+			<echo message="Setting Ant classpath so it can use ftp.ant.task.jar succceded!!"/>
+	</target>	
+	
+	<!-- Definition of the different tasks to test fpt.ant.task -->    
+	<!--  Task to test directory uploading -->
+    <target name="upload-dir" depends="ftp-init">
+        <echo message="Trying to upload directory to FTP server..."/>
+    	<verysimpleftptask host="${host}"
+    				       port="${port}"
+    					   user="${user}"
+    					   password="${password}"
+    			           bypass="${bypass}"
+    					   connType="2"
+    					   action="putdir"
+    					   sourceDir="${upload.dir}"
+    				       destDir="${dest.dir}"/>
+    	<echo message="Uploading directory was successful!!"/>
+    </target>
+		
+	<!--  Task to test directory downloading -->
+	<target name="download-dir" depends="upload-dir">
+		<echo message="Trying to download directory to FTP server..."/>
+	    	<verysimpleftptask host="${host}"
+	    				       port="${port}"
+	    					   user="${user}"
+	    					   password="${password}"
+	    			           bypass="${bypass}"
+	    					   connType="2"
+	    					   action="getdir"
+	    					   sourceDir="${dest.dir}"
+	    				       destDir="${download.dir}"/>
+	    <echo message="Downloading directory was successful!!"/>
+	 </target>
+	
+	<!--  Task to test deleting file -->
+	<target name="delete-file" depends="download-dir">
+		<echo message="Trying to delete file to FTP server..."/>
+	    	<verysimpleftptask host="${host}"
+	    				       port="${port}"
+	    					   user="${user}"
+	    					   password="${password}"
+	    			           bypass="${bypass}"
+	    					   connType="2"
+	    					   action="delfile"
+	    					   file="${file}"
+	    				       destDir="${dest.dir}"/>
+	    <echo message="Deleting file was successful!!"/>
+	 </target>
+	
+	<!--  Task to test uploading file -->
+	<target name="upload-file" depends="download-dir">
+		<echo message="Trying to upload file to FTP server..."/>
+	    	<verysimpleftptask host="${host}"
+	    				       port="${port}"
+	    					   user="${user}"
+	    					   password="${password}"
+	    			           bypass="${bypass}"
+	    					   connType="2"
+	    					   action="putfile"
+	    					   file="${upload.dir}/${file}"
+	    				       destDir="${dest.dir}"/>
+	    <echo message="Uploading file was successful!!"/>
+	 </target>
+	
+	<!--  Task to test downloading file -->
+	<target name="download-file" depends="upload-file">
+		<echo message="Trying to download file to FTP server..."/>
+	    	<verysimpleftptask host="${host}"
+	    				       port="${port}"
+	    					   user="${user}"
+	    					   password="${password}"
+	    			           bypass="${bypass}"
+	    					   connType="2"
+	    					   action="getfile"
+	    					   file="${file}"
+	    					   sourceDir="${dest.dir}"
+	    				       destDir="${download.dir}"/>
+	    <echo message="Deleting file was successful!!"/>
+	 </target>
+	
+	<!--  Task to test directory deleting -->
+	<target name="delete-dir" depends="download-file">
+		<echo message="Trying to delete directory to FTP server..."/>
+	    	<verysimpleftptask host="${host}"
+	    				       port="${port}"
+	    					   user="${user}"
+	    					   password="${password}"
+	    			           bypass="${bypass}"
+	    					   connType="2"
+	    					   action="deldir"
+	    				       destDir="${dest.dir}"/>
+	    <echo message="Deleting directory was successful!!"/>
+	 </target>
+	
+	<!--  Task to run all tests -->
+	<target name="test-ftp-ant-task" depends="ftp-init, upload-dir, download-dir, delete-file, upload-file, download-file, delete-file">
+		<echo message="All tests completed successfully!!!"/>
+	 </target>
+	
+	<!--  Task to delete contents from tmp folder -->
+	<target name="clean">
+		<echo message="Deleting tmp folder contents..."/>
+    	<delete>
+    		<fileset dir="${download.dir}" includes="*"/>
+    	</delete>
+	    <echo message="Deleting tmp folder contents successfully!"/>
+	 </target>	
+
+	
+</project> 
