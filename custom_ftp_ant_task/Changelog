@@ -1,0 +1,11 @@
+02/14/2012 - Alejandro Villamarin <alejandro.villamarin@tecnalia.com>
+
+
+* Version 1.1.0 : Added two more operations, DELFILE and DELDIR that allow to delete a file or a whole
+                  directory (non-recursive)
+                  
+03/03/2012 - Alejandro Villamarin <alejandro.villamarin@tecnalia.com>
+
+
+* Version 1.1.1 : Fixed a bug in setAction, deldir and delfile were not taking into account yet. Now they 
+                  are
