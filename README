@@ -1,0 +1,23 @@
+Introduction
+************
+
+This library implements a customized Ant task used to upload/download files from a FTP server using
+a client ftp library named vsftpclient, which also wraps basic FTP client functionalities of the 
+ftp4j library. Whenever you need to communicate with a FTP server in your Ant file and the default
+FTP Ant task is not working (which was my case) you could use this.
+
+At master you will find 2 folders:
+
+custom-ftp-ant-task
+custom-ftp-ant-task-test
+
+First one is the ant task itself
+Second one is a test project for the ant task, so you can try it out straight away
+
+Contact
+*******
+
+Feel free to contact me regarding this library at alejandrovillamarin at gmail dot com
+	
+	
+	
